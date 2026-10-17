@@ -1,0 +1,192 @@
+{
+  "name": "My workflow 3 AI",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "test-input",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -576,
+        -320
+      ],
+      "id": "04019466-8fbb-42be-b059-122417af374a",
+      "name": "Webhook",
+      "webhookId": "aaaf5b64-bec8-42ca-a256-decd9d0d6901"
+    },
+    {
+      "parameters": {
+        "chatId": "7198659385",
+        "text": "=Ada Data Masuk!\nNama: {{ $('Split Out').item.json.nama }}\nAlamat: {{ $('Split Out').item.json.alamat }}\nNo Telp: {{ $('Split Out').item.json.no_telp }}\n\nAnalisis:\n{{ $json.text }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        -224
+      ],
+      "id": "152bf0ae-8c72-4c87-a424-7700cbb87b98",
+      "name": "Send a text message",
+      "webhookId": "845c80d2-28ba-4b91-8405-3774f273b4b8",
+      "retryOnFail": false,
+      "credentials": {
+        "telegramApi": {
+          "id": "zFeNV9JIecY670VP",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "faisalbur@gmail.com",
+        "subject": "Kirim Pakai N8N",
+        "message": "=Ada Data Masuk!<br>\nNama: {{ $('Split Out').item.json.nama }}<br>\nAlamat: {{ $('Split Out').item.json.alamat }}<br>\nNo Telp: {{ $('Split Out').item.json.no_telp }}<br><br>\nAnalisis:<br>{{ $json.text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        -416
+      ],
+      "id": "ad9f6505-17bd-4db0-b2c5-4af0b964f544",
+      "name": "Send a message",
+      "webhookId": "96252ea9-e6ed-434e-83ba-83919ede22dd",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "9umMcvLb2l0aP5rB",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Tolong rapikan dan analisis data pelanggan baru ini:\nNama: {{ $json.nama }}\nAlamat: {{ $json.alamat }}\nNo Telp: {{ $json.no_telp }}\n\nJawab singkat (maksimal 5 kalimat) dalam teks biasa tanpa markdown, tanpa tanda bintang, dan tanpa heading.",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -128,
+        -320
+      ],
+      "id": "5ae7ec44-bad7-4d73-967f-8f9b224cf65b",
+      "name": "Basic LLM Chain",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -160
+      ],
+      "id": "7715e885-168d-43d6-be43-70370c84d9b9",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "KbmmbT3McEBHRxax",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "body",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -352,
+        -320
+      ],
+      "id": "22188182-c1c5-4dba-b6cb-2dfce0e2fcba",
+      "name": "Split Out"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        []
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "c4978b26-644c-4445-a2c1-1b8cbcaabd28",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6095e22a73f5b19d8313e80ab36bdf07c57fa62929d3da1a0918823992190999"
+  },
+  "id": "TXg9jvaoYPgc3nyF",
+  "tags": []
+}
