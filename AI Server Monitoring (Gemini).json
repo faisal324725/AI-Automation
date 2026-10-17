@@ -93,7 +93,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=AQ.Ab8RN6J-u23ZaFTz69WU7Gwc9EdG6UDJaF3ZxtfUmo0BcADzaA",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=kunci",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($('Evaluate').item.json.aiBody) }}",
@@ -110,7 +110,7 @@
     },
     {
       "parameters": {
-        "chatId": "7198659385",
+        "chatId": "",
         "text": "=🚨 Server Alert\n{{ $('Evaluate').item.json.issues.join('\\n') }}\n\n🤖 Analisis AI:\n{{ $json.candidates[0].content.parts[0].text }}",
         "additionalFields": {
           "appendAttribution": false
