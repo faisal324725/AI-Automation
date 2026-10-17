@@ -10,7 +10,7 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -528,
+        -576,
         -320
       ],
       "id": "04019466-8fbb-42be-b059-122417af374a",
@@ -19,15 +19,15 @@
     },
     {
       "parameters": {
-        "chatId": "7198659385",
+        "chatId": "",
         "text": "=Ada Data Masuk!\nNama: {{ $('Split Out').item.json.nama }}\nAlamat: {{ $('Split Out').item.json.alamat }}\nNo Telp: {{ $('Split Out').item.json.no_telp }}\n\nAnalisis:\n{{ $json.text }}",
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        384,
-        -64
+        224,
+        -224
       ],
       "id": "152bf0ae-8c72-4c87-a424-7700cbb87b98",
       "name": "Send a text message",
@@ -50,8 +50,8 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
       "position": [
-        384,
-        -256
+        224,
+        -416
       ],
       "id": "ad9f6505-17bd-4db0-b2c5-4af0b964f544",
       "name": "Send a message",
@@ -72,8 +72,8 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        -240,
-        -288
+        -128,
+        -320
       ],
       "id": "5ae7ec44-bad7-4d73-967f-8f9b224cf65b",
       "name": "Basic LLM Chain",
@@ -87,8 +87,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        -240,
-        -64
+        0,
+        -160
       ],
       "id": "7715e885-168d-43d6-be43-70370c84d9b9",
       "name": "Google Gemini Chat Model",
@@ -107,8 +107,8 @@
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
-        -512,
-        -96
+        -352,
+        -320
       ],
       "id": "22188182-c1c5-4dba-b6cb-2dfce0e2fcba",
       "name": "Split Out"
@@ -182,7 +182,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "d82ebe81-402c-496a-83f5-15ae267fd03b",
+  "versionId": "c4978b26-644c-4445-a2c1-1b8cbcaabd28",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "6095e22a73f5b19d8313e80ab36bdf07c57fa62929d3da1a0918823992190999"
