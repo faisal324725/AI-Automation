@@ -1,0 +1,310 @@
+{
+  "name": "AI Server Monitoring (Gemini)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "id": "05a0bd51-2ba9-4042-b57e-6203d402e475",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        1616,
+        -272
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "36fa0884-7934-4da5-9f58-d1bec75aa846",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        1616,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "command": "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\monitor\\check.ps1"
+      },
+      "id": "ae632883-1ea9-46d6-ba8e-323d3a372b26",
+      "name": "Cek Server (PowerShell)",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1840,
+        -176
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===== KONFIGURASI =====\nconst DEMO = true;   // true = threshold diturunkan supaya alert pasti muncul. Ubah ke false setelah demo.\n\nconst d = JSON.parse($input.first().json.stdout);\nconst T = DEMO\n  ? { cpu: 1, diskFree: 25, ram: 30, licenseDays: 90 }\n  : { cpu: 80, diskFree: 25, ram: 70, licenseDays: 90 };\n\nconst issues = [];\nif (d.cpu >= T.cpu) issues.push(`CPU tinggi: ${d.cpu}% (batas ${T.cpu}%)`);\nif (d.disk_free < T.diskFree) issues.push(`Disk sisa ${d.disk_free}% (min ${T.diskFree}%)`);\nif (d.ram > T.ram) issues.push(`RAM ${d.ram}% (maks ${T.ram}%)`);\nif (d.net !== 'Connected') issues.push('Koneksi timeout');\nif (d.svc !== 'Running') issues.push(`Service ${d.svc} (Down)`);\nif (d.errors > 0 || d.warnings > 0) issues.push(`${d.errors} error, ${d.warnings} warning dalam 1 jam terakhir`);\n\nconst daysLeft = Math.floor((new Date(d.license_expiry) - new Date()) / 86400000);\nif (daysLeft < T.licenseDays) issues.push(`License expire ${daysLeft} hari lagi`);\n\nconst prompt = `Kamu adalah engineer monitoring server. Berikut hasil health check:\n\nMetrik: CPU ${d.cpu}%, Disk free ${d.disk_free}%, RAM ${d.ram}%, Network ${d.net}, Service Spooler: ${d.svc}\nMasalah terdeteksi: ${issues.join('; ')}\nPotongan log (1 jam terakhir): ${d.logs || '(kosong)'}\n\nTugas: (1) rangkum masalah dalam 2 kalimat, (2) kemungkinan penyebab, (3) langkah troubleshooting berurutan beserta command-nya (Windows/PowerShell).\nGunakan nama service \"Spooler\" di command, jangan pakai placeholder.\nJawab singkat dalam bahasa Indonesia, tanpa markdown.`;\n\nconst aiBody = { contents: [{ parts: [{ text: prompt }] }] };\n\nreturn [{ json: { ...d, license_days_left: daysLeft, issues, hasIssue: issues.length > 0, aiBody } }];"
+      },
+      "id": "b4d2d026-8a15-49b1-8699-466c4a135c2d",
+      "name": "Evaluate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2064,
+        -176
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.hasIssue }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6d69bc06-0b05-4530-b2e1-6b3ada7a7f04",
+      "name": "Ada Issue?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2288,
+        -176
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=AQ.Ab8RN6J-u23ZaFTz69WU7Gwc9EdG6UDJaF3ZxtfUmo0BcADzaA",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Evaluate').item.json.aiBody) }}",
+        "options": {}
+      },
+      "id": "64870382-0be0-4838-9ba8-978e86fef199",
+      "name": "Analisis AI (Gemini)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2512,
+        -272
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "7198659385",
+        "text": "=🚨 Server Alert\n{{ $('Evaluate').item.json.issues.join('\\n') }}\n\n🤖 Analisis AI:\n{{ $json.candidates[0].content.parts[0].text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "bba69a52-872c-4fff-b128-caec60bb4e27",
+      "name": "Kirim Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2960,
+        -368
+      ],
+      "webhookId": "f5534545-883f-4ca9-9716-2c05675b1509",
+      "credentials": {
+        "telegramApi": {
+          "id": "zFeNV9JIecY670VP",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "178d0f10-3bab-41c0-a718-df7063ef8efa",
+      "name": "Normal (stop)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2512,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8208ccf3-cc36-4d65-908f-c9eb689548a7",
+              "leftValue": "={{ $('Evaluate').item.json.issues.length }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2736,
+        -272
+      ],
+      "id": "3c30ad89-5752-47b9-a821-cb2f696aea9c",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "sendTo": "faisalbur@gmail.com",
+        "subject": "=⚠️ Server Warning: {{ $('Evaluate').item.json.issues[0] }}",
+        "message": "=Ada 1 masalah terdeteksi di server:  {{ $('Evaluate').item.json.issues[0] }}  Analisis AI: {{ $json.candidates[0].content.parts[0].text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2960,
+        -176
+      ],
+      "id": "8da3d176-1574-4283-95b8-8fe8b6f1e106",
+      "name": "Send a message",
+      "webhookId": "5c0ca923-f82a-4e36-a496-2ecc38bb84c9",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "9umMcvLb2l0aP5rB",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Cek Server (PowerShell)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Cek Server (PowerShell)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cek Server (PowerShell)": {
+      "main": [
+        [
+          {
+            "node": "Evaluate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate": {
+      "main": [
+        [
+          {
+            "node": "Ada Issue?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ada Issue?": {
+      "main": [
+        [
+          {
+            "node": "Analisis AI (Gemini)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Normal (stop)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analisis AI (Gemini)": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Kirim Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "6fddbcea-1594-48a7-8a0e-81144baf002c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6095e22a73f5b19d8313e80ab36bdf07c57fa62929d3da1a0918823992190999"
+  },
+  "id": "2Xrn8NmNwR1wZDGV",
+  "tags": []
+}
