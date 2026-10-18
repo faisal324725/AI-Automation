@@ -1,0 +1,44 @@
+npm install -g n8n
+BIAR JALAN DI IPV4 / RESULT masalahnya node Telegram gagal terhubung ke server Telegram (connection timed out).
+Solusi: ganti DNS ke 1.1.1.1 / 8.8.8.8, atau pakai VPN, atau coba pindah ke hotspot HP.
+
+IPv6 bermasalah (sering di n8n versi baru / Node.js)
+Node.js kadang mencoba IPv6 dulu, lalu timeout. Kalau browser bisa buka Telegram tapi n8n tidak, kemungkinan ini penyebabnya. Coba jalankan n8n dengan variabel environment ini:
+Solusi: set NODE_OPTIONS=--dns-result-order=ipv4first
+
+Kalau pakai Docker, tambahkan NODE_OPTIONS=--dns-result-order=ipv4first di bagian environment.
+Kalau n8n jalan di Docker
+Pastikan container punya akses internet dan DNS yang benar. Tambahkan di docker-compose:
+dns:
+  - 8.8.8.8
+  - 1.1.1.1
+
+Kalau mau lebih praktis lagi, bikin file start-n8n.bat di Desktop isinya:
+@echo off
+n8n
+
+
+ngrok config add-authtoken 3KrC9DK3wZlytRPuIq64VgwVJsM_GcrfBZgWCPQAZ3Nve3Jp
+ngrok http 80 --url https://yoyo-decline-corny.ngrok-free.dev
+set WEBHOOK_URL=https://yoyo-decline-corny.ngrok-free.dev/
+
+BUAT JALANIN NGROK KALO MATI ngrok http 5678 --url https://yoyo-decline-corny.ngrok-free.dev
+
+n8n start
+
+Kalau pakai Docker, tambahin -e WEBHOOK_URL=https://yoyo-decline-corny.ngrok-free.dev/ di perintah docker run lo.
+
+Urutan yang aman setelah laptop mati
+Nyalain ngrok dulu, baru n8n (dengan WEBHOOK_URL). Workflow yang statusnya Published bakal aktif lagi sendiri begitu n8n jalan, jadi nggak perlu Publish ulang.
+
+Biar sekali klik: bikin file .bat
+Buka Notepad, tempel ini, lalu Save As dengan nama start-demo.bat (di kolom Save as type pilih All files, kalau nggak jadi .txt):
+@echo off
+start "ngrok" cmd /k "cd /d C:\Users\pc\Downloads\ngrok-v3-stable-windows-amd64 && ngrok http 5678 --url https://yoyo-decline-corny.ngrok-free.dev"
+timeout /t 5
+start "n8n" cmd /k "set "WEBHOOK_URL=https://yoyo-decline-corny.ngrok-free.dev/" && n8n start"
+
+Tinggal double-click, dan dua jendela (ngrok dan n8n) kebuka otomatis. Tanda kutip di sekitar WEBHOOK_URL itu sengaja, supaya nggak ada spasi nyelip di ujung URL.
+
+Kalau ngrok error “endpoint already online” (kode ERR_NGROK_334), artinya masih ada ngrok lama yang jalan di balik layar. Tutup jendela ngrok yang lama, atau jalankan taskkill /f /im ngrok.exe di cmd, lalu nyalain lagi.
+
