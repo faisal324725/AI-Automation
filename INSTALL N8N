@@ -1,0 +1,19 @@
+npm install -g n8n
+BIAR JALAN DI IPV4 / RESULT masalahnya node Telegram gagal terhubung ke server Telegram (connection timed out).
+Solusi: ganti DNS ke 1.1.1.1 / 8.8.8.8, atau pakai VPN, atau coba pindah ke hotspot HP.
+
+IPv6 bermasalah (sering di n8n versi baru / Node.js)
+Node.js kadang mencoba IPv6 dulu, lalu timeout. Kalau browser bisa buka Telegram tapi n8n tidak, kemungkinan ini penyebabnya. Coba jalankan n8n dengan variabel environment ini:
+Solusi: set NODE_OPTIONS=--dns-result-order=ipv4first
+
+Kalau pakai Docker, tambahkan NODE_OPTIONS=--dns-result-order=ipv4first di bagian environment.
+Kalau n8n jalan di Docker
+Pastikan container punya akses internet dan DNS yang benar. Tambahkan di docker-compose:
+dns:
+  - 8.8.8.8
+  - 1.1.1.1
+
+Kalau mau lebih praktis lagi, bikin file start-n8n.bat di Desktop isinya:
+@echo off
+n8n
+
